@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Satisfacción - Curso de Finés</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        suomi: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bae0fd',
+                            500: '#00529b',
+                            600: '#004080',
+                            700: '#003366',
+                            800: '#00264d',
+                            900: '#001a33',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Brand & Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-suomi-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-suomi-600/20">
+                        Suomi
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-900 leading-tight">Suomi Oppia — Analíticas de Satisfacción</h1>
+                        <p class="text-xs text-slate-500">Curso de Finés para Principiantes (Jóvenes y Adultos)</p>
+                    </div>
+                </div>
+
+                <!-- Right Side Info & Download Action -->
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                        Simulador Activo (250 Alumnos)
+                    </span>
+                    <button id="btn-export" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold text-white bg-suomi-600 hover:bg-suomi-700 rounded-xl shadow-sm transition-all hover:shadow">
+                        <i data-lucide="download" class="w-4 h-4 mr-1.5"></i>
+                        Descargar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Banner Alert / Info -->
+        <div class="bg-gradient-to-r from-suomi-700 to-suomi-500 rounded-2xl p-5 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="bg-white/20 px-2 py-0.5 rounded text-xs uppercase tracking-wider font-semibold text-white">Simulación de Estudiantes</span>
+                    <h2 class="text-xl font-bold">Resumen Global de Evaluación del Curso</h2>
+                </div>
+                <p class="text-suomi-100 text-sm max-w-2xl">
+                    Datos generados automáticamente con nombres reales de estudiantes. Clasificación completa de la escala de satisfacción de 5 niveles para optimizar el aprendizaje del idioma finés.
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-reseed" class="px-4 py-2 bg-white text-suomi-700 hover:bg-suomi-50 text-sm font-semibold rounded-xl shadow transition-all hover:shadow-md flex items-center">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                    Regenerar Datos
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Reviews Card -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Evaluaciones</span>
+                    <div class="p-2 bg-blue-50 text-suomi-600 rounded-xl">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-3xl font-extrabold text-slate-900" id="card-total-reviews">250</span>
+                    <span class="text-xs text-emerald-600 font-medium flex items-center">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-0.5"></i> 100% sim.
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Muestreo automatizado de alumnos</p>
+            </div>
+
+            <!-- Overall Satisfaction / Score -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Puntuación Promedio</span>
+                    <div class="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                        <i data-lucide="star" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <div class="flex items-baseline space-x-1">
+                        <span class="text-3xl font-extrabold text-slate-900" id="card-avg-rating">4.2</span>
+                        <span class="text-slate-400 text-sm font-medium">/ 5.0</span>
+                    </div>
+                    <div class="flex text-amber-400 text-xs" id="card-stars"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-2" id="card-satisfaction-status">Nivel Alto de Aceptación</p>
+            </div>
+
+            <!-- Feedback Ratio -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ratio de Comentarios</span>
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-3xl font-extrabold text-slate-900" id="card-feedback-ratio">72%</span>
+                    <span class="text-xs text-indigo-600 font-medium" id="card-feedback-count">180 con texto</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Reseñas con feedback cualitativo</p>
+            </div>
+
+            <!-- Course Completion Rate -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tasa de Finalización</span>
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-3xl font-extrabold text-slate-900" id="card-completion-rate">84%</span>
+                    <span class="text-xs text-emerald-600 font-medium">+5% vs meta</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Estudiantes que concluyen el módulo</p>
+            </div>
+        </div>
+
+        <!-- Charts Section (2 Columns) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Scale Breakdown (Bar Chart / Distribution) -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Escala de Satisfacción (5 Niveles)</h3>
+                        <p class="text-xs text-slate-500">Desglose de respuestas desde "Muy Mal" hasta "Excelente"</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-xs font-medium text-slate-600">
+                            5 Categorías
+                        </span>
+                    </div>
+                </div>
+
+                <div class="relative h-64 w-full">
+                    <canvas id="satisfactionBarChart"></canvas>
+                </div>
+
+                <div class="grid grid-cols-5 gap-2 mt-6 pt-4 border-t border-slate-100 text-center">
+                    <div class="p-2 rounded-xl bg-emerald-50 text-emerald-800">
+                        <div class="text-xs font-medium text-emerald-600">Excelente</div>
+                        <div class="text-lg font-bold" id="cnt-excelente">0</div>
+                    </div>
+                    <div class="p-2 rounded-xl bg-blue-50 text-blue-800">
+                        <div class="text-xs font-medium text-blue-600">Bueno</div>
+                        <div class="text-lg font-bold" id="cnt-bueno">0</div>
+                    </div>
+                    <div class="p-2 rounded-xl bg-amber-50 text-amber-800">
+                        <div class="text-xs font-medium text-amber-600">Regular</div>
+                        <div class="text-lg font-bold" id="cnt-regular">0</div>
+                    </div>
+                    <div class="p-2 rounded-xl bg-orange-50 text-orange-800">
+                        <div class="text-xs font-medium text-orange-600">Mal</div>
+                        <div class="text-lg font-bold" id="cnt-mal">0</div>
+                    </div>
+                    <div class="p-2 rounded-xl bg-rose-50 text-rose-800">
+                        <div class="text-xs font-medium text-rose-600">Muy Mal</div>
+                        <div class="text-lg font-bold" id="cnt-muy-mal">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demographic Breakdown (Donut Chart) -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="mb-4">
+                        <h3 class="text-base font-bold text-slate-900">Demografía de Estudiantes</h3>
+                        <p class="text-xs text-slate-500">Distribución Jóvenes vs Adultos</p>
+                    </div>
+
+                    <div class="relative h-52 w-full flex items-center justify-center">
+                        <canvas id="demographicDoughnutChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mt-4 pt-4 border-t border-slate-100">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="flex items-center text-slate-600">
+                            <span class="w-3 h-3 rounded-full bg-suomi-500 mr-2"></span> Jóvenes (&lt;25 años)
+                        </span>
+                        <span class="font-bold text-slate-800" id="demo-jovenes-percent">0%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="flex items-center text-slate-600">
+                            <span class="w-3 h-3 rounded-full bg-teal-400 mr-2"></span> Adultos (25+ años)
+                        </span>
+                        <span class="font-bold text-slate-800" id="demo-adultos-percent">0%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 italic bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        💡 Los jóvenes prefieren las tarjetas de vocabulario interactivas, mientras que los adultos destacan explicaciones gramaticales.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews & Feedback Section -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Listado de Evaluaciones y Feedback de Estudiantes</h3>
+                        <p class="text-xs text-slate-500">Filtra y explora las opiniones detalladas sobre las clases de finés</p>
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        Mostrando <span id="visible-count" class="font-bold text-slate-800">0</span> de <span id="total-count" class="font-bold text-slate-800">250</span> resultados
+                    </div>
+                </div>
+
+                <!-- Controls Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 pt-2">
+                    <div class="lg:col-span-4 relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="input-search" placeholder="Buscar por estudiante o palabras clave..."
+                            class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-suomi-500 focus:bg-white transition-all">
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <select id="select-rating" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-suomi-500 focus:bg-white transition-all text-slate-700">
+                            <option value="ALL">Todas las Calificaciones</option>
+                            <option value="Excelente">⭐⭐⭐⭐⭐ Excelente</option>
+                            <option value="Bueno">⭐⭐⭐⭐ Bueno</option>
+                            <option value="Regular">⭐⭐⭐ Regular</option>
+                            <option value="Mal">⭐⭐ Mal</option>
+                            <option value="Muy Mal">⭐ Muy Mal</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <select id="select-comment-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-suomi-500 focus:bg-white transition-all text-slate-700">
+                            <option value="ALL">Todos los Registros</option>
+                            <option value="WITH_COMMENT">Con Comentario / Feedback</option>
+                            <option value="WITHOUT_COMMENT">Sin Comentario (Solo Nota)</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <select id="select-demographic" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-suomi-500 focus:bg-white transition-all text-slate-700">
+                            <option value="ALL">Todos (Público)</option>
+                            <option value="Joven">Jóvenes</option>
+                            <option value="Adulto">Adultos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List of Feedback Items -->
+            <div id="reviews-container" class="divide-y divide-slate-100 max-h-[600px] overflow-y-auto"></div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden p-12 text-center">
+                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="filter-x" class="w-6 h-6"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-800">No se encontraron evaluaciones</h4>
+                <p class="text-xs text-slate-500 mt-1">Prueba cambiando los filtros de búsqueda o el texto ingresado.</p>
+                <button id="btn-reset-filters" class="mt-4 px-3 py-1.5 bg-suomi-50 text-suomi-600 rounded-lg text-xs font-medium hover:bg-suomi-100 transition-colors">
+                    Restablecer Filtros
+                </button>
+            </div>
+
+            <!-- Footer Pagination Controls -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <div>
+                    Página <span id="current-page-num" class="font-bold text-slate-800">1</span> de <span id="total-pages-num" class="font-bold text-slate-800">1</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="btn-prev-page" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-medium hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Anterior
+                    </button>
+                    <button id="btn-next-page" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-medium hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto py-4">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+            © 2026 Suomi Oppia Analytics — Plataforma de Métricas de Calidad para Cursos de Idiomas.
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Real Realistic Student Names (First + Last)
+        const REAL_NAMES = [
+            "Mikael Koskinen", "Sofia Korhonen", "Lauri Virtanen", "Aino Nieminen", "Eero Mäkelä",
+            "Emma Hämäläinen", "Juho Laine", "Venla Heikkinen", "Onni Järvinen", "Saara Lehtonen",
+            "Aleksi Saari", "Helmi Salo", "Valtteri Turunen", "Anni Heinonen", "Oskari Niemi",
+            "Emilia Kinnunen", "Kalle Heiskanen", "Oona Mattila", "Eetu Tuominen", "Siiri Karjalainen",
+            "Mateo García", "Lucía Fernández", "Carlos Mendoza", "Camila Torres", "Alejandro Silva"
+        ];
+
+        const YOUNG_AGES = [16, 17, 18, 19, 20, 21, 22, 23, 24];
+        const ADULT_AGES = [25, 29, 33, 38, 42, 47, 53, 59];
+
+        const COMMENTS_POOL = {
+            "Excelente": [
+                "¡Me encanta el sistema de tarjetas de vocabulario! Aprender palabras como 'Kiitos' y 'Terve' fue super intuitivo.",
+                "El ritmo de la profesora es perfecto. Explica el caso nominativo e inesivo sin que resulte abrumador.",
+                "Excelente plataforma. Las explicaciones sobre los casos gramaticales están muy simplificadas para principiantes.",
+                "Los ejercicios con audio grabado por nativos de Helsinki ayudan muchísimo a acostumbrar el oído.",
+                "La app interactiva para practicar la pronunciación de las vocales dobles (como 'aa' o 'yy') es brillante.",
+                "Muy buen equilibrio entre gramática dura y frases útiles para viajar a Finlandia."
+            ],
+            "Bueno": [
+                "Buen curso en general. La pronunciación del finés es difícil pero los audios ayudan bastante.",
+                "Me gusta la estructura por módulos, aunque me gustaría tener más ejercicios prácticos de conversación.",
+                "Las tarjetas de vocabulario son geniales. La gramática sigue siendo un reto pero está bien explicada.",
+                "Buen contenido para principiantes. A veces la interfaz en móvil se siente un poco apretada pero nada grave.",
+                "Buenas explicaciones. Los casos del finés asustan al principio pero el profesor los desglosa bien."
+            ],
+            "Regular": [
+                "La gramática finesa es demasiado compleja y siento que faltan más ejemplos resueltos de los casos.",
+                "Está bien, pero la app necesita más ejercicios interactivos y menos texto teórico.",
+                "El ritmo es a veces demasiado rápido en los capítulos de conjugación de verbos.",
+                "Faltan más audios con voces masculinas y femeninas variadas para la comprensión auditiva."
+            ],
+            "Mal": [
+                "Demasiada teoría gramatical de golpe. El finés es duro y esta metodología no me ayudó mucho.",
+                "Los audios de pronunciación se escuchan algo robotizados en el módulo 3.",
+                "Me cuesta mucho avanzar con los casos del finés, faltan explicaciones más dinámicas."
+            ],
+            "Muy Mal": [
+                "Muy frustrante. La armonía vocálica no quedó nada clara y los ejercicios son muy repetitivos.",
+                "No recomendado si no tienes conocimientos previos, usaron términos gramaticales muy complejos.",
+                "El contenido en audio falla constantemente y las explicaciones de gramática son confusas."
+            ]
+        };
+
+        // Global State
+        let allReviews = [];
+        let filteredReviews = [];
+        let currentPage = 1;
+        const itemsPerPage = 8;
+
+        let barChartInstance = null;
+        let doughnutChartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            generateInitialData();
+            setupCharts();
+            setupEventListeners();
+            applyFilters();
+        });
+
+        function generateInitialData(count = 250) {
+            allReviews = [];
+            const now = new Date();
+
+            for (let i = 0; i < count; i++) {
+                const rand = Math.random();
+                let ratingStr = "Excelente";
+                let stars = 5;
+
+                if (rand < 0.45) {
+                    ratingStr = "Excelente";
+                    stars = 5;
+                } else if (rand < 0.75) {
+                    ratingStr = "Bueno";
+                    stars = 4;
+                } else if (rand < 0.88) {
+                    ratingStr = "Regular";
+                    stars = 3;
+                } else if (rand < 0.95) {
+                    ratingStr = "Mal";
+                    stars = 2;
+                } else {
+                    ratingStr = "Muy Mal";
+                    stars = 1;
+                }
+
+                const isYoung = Math.random() < 0.55;
+                const age = isYoung 
+                    ? YOUNG_AGES[Math.floor(Math.random() * YOUNG_AGES.length)]
+                    : ADULT_AGES[Math.floor(Math.random() * ADULT_AGES.length)];
+                
+                const category = isYoung ? "Joven" : "Adulto";
+                const baseName = REAL_NAMES[Math.floor(Math.random() * REAL_NAMES.length)];
+                
+                const hasComment = Math.random() < 0.72;
+                let comment = "";
+                if (hasComment) {
+                    const pool = COMMENTS_POOL[ratingStr];
+                    comment = pool[Math.floor(Math.random() * pool.length)];
+                }
+
+                const daysAgo = Math.floor(Math.random() * 30);
+                const reviewDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+                const formattedDate = reviewDate.toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                allReviews.push({
+                    id: i + 1,
+                    studentName: baseName,
+                    category: category,
+                    age: age,
+                    stars: stars,
+                    ratingLabel: ratingStr,
+                    comment: comment,
+                    hasComment: hasComment,
+                    date: formattedDate,
+                    timestamp: reviewDate.getTime()
+                });
+            }
+
+            allReviews.sort((a, b) => b.timestamp - a.timestamp);
+        }
+
+        function setupCharts() {
+            const ctxBar = document.getElementById('satisfactionBarChart').getContext('2d');
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Excelente (5★)', 'Bueno (4★)', 'Regular (3★)', 'Mal (2★)', 'Muy Mal (1★)'],
+                    datasets: [{
+                        label: 'Número de Reseñas',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#f43f5e'],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.raw} alumnos (${((ctx.raw / allReviews.length) * 100).toFixed(1)}%)`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } },
+                        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+                    }
+                }
+            });
+
+            const ctxDoughnut = document.getElementById('demographicDoughnutChart').getContext('2d');
+            doughnutChartInstance = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Jóvenes (<25 años)', 'Adultos (25+ años)'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#00529b', '#2dd4bf'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateMetricsAndCharts() {
+            const total = allReviews.length;
+            const countComment = allReviews.filter(r => r.hasComment).length;
+            const avgRating = (allReviews.reduce((acc, r) => acc + r.stars, 0) / total).toFixed(1);
+
+            document.getElementById('card-total-reviews').textContent = total;
+            document.getElementById('card-avg-rating').textContent = avgRating;
+            
+            const starsContainer = document.getElementById('card-stars');
+            starsContainer.innerHTML = '';
+            const roundedRating = Math.round(avgRating);
+            for (let i = 1; i <= 5; i++) {
+                const starIcon = document.createElement('i');
+                starIcon.setAttribute('data-lucide', 'star');
+                starIcon.className = `w-4 h-4 ${i <= roundedRating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`;
+                starsContainer.appendChild(starIcon);
+            }
+
+            document.getElementById('card-feedback-ratio').textContent = `${Math.round((countComment / total) * 100)}%`;
+            document.getElementById('card-feedback-count').textContent = `${countComment} con texto`;
+
+            const counts = {
+                "Excelente": allReviews.filter(r => r.stars === 5).length,
+                "Bueno": allReviews.filter(r => r.stars === 4).length,
+                "Regular": allReviews.filter(r => r.stars === 3).length,
+                "Mal": allReviews.filter(r => r.stars === 2).length,
+                "Muy Mal": allReviews.filter(r => r.stars === 1).length
+            };
+
+            document.getElementById('cnt-excelente').textContent = counts["Excelente"];
+            document.getElementById('cnt-bueno').textContent = counts["Bueno"];
+            document.getElementById('cnt-regular').textContent = counts["Regular"];
+            document.getElementById('cnt-mal').textContent = counts["Mal"];
+            document.getElementById('cnt-muy-mal').textContent = counts["Muy Mal"];
+
+            if (barChartInstance) {
+                barChartInstance.data.datasets[0].data = [
+                    counts["Excelente"], counts["Bueno"], counts["Regular"], counts["Mal"], counts["Muy Mal"]
+                ];
+                barChartInstance.update();
+            }
+
+            const youngCount = allReviews.filter(r => r.category === 'Joven').length;
+            const adultCount = allReviews.filter(r => r.category === 'Adulto').length;
+            const youngPct = Math.round((youngCount / total) * 100);
+            const adultPct = 100 - youngPct;
+
+            document.getElementById('demo-jovenes-percent').textContent = `${youngPct}% (${youngCount})`;
+            document.getElementById('demo-adultos-percent').textContent = `${adultPct}% (${adultCount})`;
+
+            if (doughnutChartInstance) {
+                doughnutChartInstance.data.datasets[0].data = [youngCount, adultCount];
+                doughnutChartInstance.update();
+            }
+
+            lucide.createIcons();
+        }
+
+        function applyFilters() {
+            const searchText = document.getElementById('input-search').value.toLowerCase().trim();
+            const selectedRating = document.getElementById('select-rating').value;
+            const selectedCommentStatus = document.getElementById('select-comment-status').value;
+            const selectedDemographic = document.getElementById('select-demographic').value;
+
+            filteredReviews = allReviews.filter(item => {
+                if (searchText) {
+                    const inComment = item.comment.toLowerCase().includes(searchText);
+                    const inName = item.studentName.toLowerCase().includes(searchText);
+                    if (!inComment && !inName) return false;
+                }
+
+                if (selectedRating !== 'ALL' && item.ratingLabel !== selectedRating) return false;
+                if (selectedCommentStatus === 'WITH_COMMENT' && !item.hasComment) return false;
+                if (selectedCommentStatus === 'WITHOUT_COMMENT' && item.hasComment) return false;
+                if (selectedDemographic !== 'ALL' && item.category !== selectedDemographic) return false;
+
+                return true;
+            });
+
+            currentPage = 1;
+            renderReviewList();
+        }
+
+        function renderReviewList() {
+            const container = document.getElementById('reviews-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            document.getElementById('total-count').textContent = allReviews.length;
+            document.getElementById('visible-count').textContent = filteredReviews.length;
+
+            if (filteredReviews.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                document.getElementById('current-page-num').textContent = 0;
+                document.getElementById('total-pages-num').textContent = 0;
+                document.getElementById('btn-prev-page').disabled = true;
+                document.getElementById('btn-next-page').disabled = true;
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+            document.getElementById('current-page-num').textContent = currentPage;
+            document.getElementById('total-pages-num').textContent = totalPages;
+
+            document.getElementById('btn-prev-page').disabled = currentPage <= 1;
+            document.getElementById('btn-next-page').disabled = currentPage >= totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageItems = filteredReviews.slice(startIndex, startIndex + itemsPerPage);
+
+            let html = '';
+            pageItems.forEach(item => {
+                const badgeColor = getRatingBadgeClass(item.stars);
+                const avatarBg = item.category === 'Joven' ? 'bg-suomi-100 text-suomi-700' : 'bg-teal-100 text-teal-800';
+
+                let starsHtml = '';
+                for (let s = 1; s <= 5; s++) {
+                    starsHtml += `<i data-lucide="star" class="w-3.5 h-3.5 ${s <= item.stars ? 'fill-amber-400 text-amber-400' : 'text-slate-200'} inline"></i>`;
+                }
+
+                const initials = item.studentName.split(' ').map(n => n[0]).join('');
+
+                html += `
+                <div class="p-5 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row items-start justify-between gap-4">
+                    <div class="flex items-start space-x-3.5">
+                        <div class="w-10 h-10 rounded-full ${avatarBg} font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm border border-black/5">
+                            ${initials}
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <div class="flex items-center flex-wrap gap-2">
+                                <span class="font-bold text-slate-900 text-sm">${item.studentName}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+                                    ${item.category} / ${item.age} años
+                                </span>
+                                <span class="text-xs text-slate-400">• ${item.date}</span>
+                            </div>
+
+                            <div class="flex items-center space-x-2 pt-0.5">
+                                <div class="flex items-center space-x-0.5">${starsHtml}</div>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-md ${badgeColor}">
+                                    ${item.ratingLabel}
+                                </span>
+                            </div>
+
+                            ${item.hasComment ? `
+                                <p class="text-sm text-slate-700 mt-2 bg-slate-50/80 p-3 rounded-xl border border-slate-100 italic">
+                                    "${escapeHtml(item.comment)}"
+                                </p>
+                            ` : `
+                                <p class="text-xs text-slate-400 italic mt-1">Sin comentario escrito.</p>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function getRatingBadgeClass(stars) {
+            switch(stars) {
+                case 5: return 'bg-emerald-100 text-emerald-800';
+                case 4: return 'bg-blue-100 text-blue-800';
+                case 3: return 'bg-amber-100 text-amber-800';
+                case 2: return 'bg-orange-100 text-orange-800';
+                case 1: return 'bg-rose-100 text-rose-800';
+                default: return 'bg-slate-100 text-slate-800';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('input-search').addEventListener('input', applyFilters);
+            document.getElementById('select-rating').addEventListener('change', applyFilters);
+            document.getElementById('select-comment-status').addEventListener('change', applyFilters);
+            document.getElementById('select-demographic').addEventListener('change', applyFilters);
+
+            document.getElementById('btn-prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderReviewList();
+                }
+            });
+
+            document.getElementById('btn-next-page').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderReviewList();
+                }
+            });
+
+            document.getElementById('btn-reset-filters').addEventListener('click', () => {
+                document.getElementById('input-search').value = '';
+                document.getElementById('select-rating').value = 'ALL';
+                document.getElementById('select-comment-status').value = 'ALL';
+                document.getElementById('select-demographic').value = 'ALL';
+                applyFilters();
+            });
+
+            document.getElementById('btn-reseed').addEventListener('click', () => {
+                generateInitialData(250);
+                updateMetricsAndCharts();
+                applyFilters();
+            });
+
+            document.getElementById('btn-export').addEventListener('click', () => {
+                const csvHeader = "data:text/csv;charset=utf-8,Nombre_Estudiante,Segmento_Demografico,Edad,Escala_Satisfaccion,Calificacion_Estrellas,Fecha,Comentario_Feedback\n";
+                const csvRows = filteredReviews.map(r => 
+                    `"${r.studentName}","${r.category}",${r.age},"${r.ratingLabel}",${r.stars},"${r.date}","${r.comment.replace(/"/g, '""')}"`
+                ).join("\n");
+                
+                const encodedUri = encodeURI(csvHeader + csvRows);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "satisfaccion_curso_fines.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+    </script>
+</body>
+</html>
